@@ -20,7 +20,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
-        mTextView1.setText("hello android");
-        mTextView2.setText("hello Python");
+//        mTextView1.setText("hello android");
+//        mTextView2.setText("hello Python");
     }
 }

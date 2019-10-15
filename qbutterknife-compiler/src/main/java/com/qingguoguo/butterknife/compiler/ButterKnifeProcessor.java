@@ -97,15 +97,15 @@ public class ButterKnifeProcessor extends AbstractProcessor {
         }
         System.out.println("----" + elementMap + "-----");
 
-        //生成代码
+        // 生成代码
         Set<Map.Entry<Element, List<Element>>> entries = elementMap.entrySet();
         for (Map.Entry<Element, List<Element>> entry : entries) {
             Element element = entry.getKey();
-            //父类
+            // 父类
             ClassName unBinderClassName = ClassName.get("com.qingguoguo.butterknife", "UnBinder");
 
-            //生成类
-            //activity Class Name
+            // 生成类文件
+            // activity Class Name
             String activityClassNameStr = element.getSimpleName().toString();
             ClassName activityClassName = ClassName.bestGuess(activityClassNameStr);
             TypeSpec.Builder activityBuilder = TypeSpec.classBuilder(activityClassNameStr + "_ViewBinding")
