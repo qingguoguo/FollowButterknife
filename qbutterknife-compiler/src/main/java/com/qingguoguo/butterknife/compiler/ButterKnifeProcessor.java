@@ -42,8 +42,6 @@ public class ButterKnifeProcessor extends AbstractProcessor {
 
     /**
      * 用来指定支持的 SourceVersion
-     *
-     * @return
      */
     @Override
     public SourceVersion getSupportedSourceVersion() {
@@ -52,8 +50,6 @@ public class ButterKnifeProcessor extends AbstractProcessor {
 
     /**
      * 用来指定支持的 AnnotationTypes
-     *
-     * @return
      */
     @Override
     public Set<String> getSupportedAnnotationTypes() {
@@ -66,8 +62,6 @@ public class ButterKnifeProcessor extends AbstractProcessor {
 
     /**
      * 参考 ButterKnife 的写法
-     *
-     * @return
      */
     private Set<Class<? extends Annotation>> getSupportedAnnotations() {
         Set<Class<? extends Annotation>> annotations = new LinkedHashSet<>();

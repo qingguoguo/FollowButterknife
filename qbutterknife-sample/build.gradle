@@ -26,7 +26,8 @@ dependencies {
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'com.android.support.test:runner:1.0.2'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
-    compile project(':butterknife')
-    compile project(path: ':butterknife-annotations')
-    annotationProcessor project(':butterknife-compiler')
+
+    implementation project(':qbutterknife')
+    implementation project(':qbutterknife-annotations')
+    annotationProcessor project(':qbutterknife-compiler')
 }
