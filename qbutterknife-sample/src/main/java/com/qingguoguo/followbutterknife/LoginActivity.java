@@ -13,7 +13,6 @@ public class LoginActivity extends AppCompatActivity {
     @BindView(R.id.tv4)
     TextView mTextView2;
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

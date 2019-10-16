@@ -11,7 +11,6 @@ public class MainActivity extends AppCompatActivity {
 
     @BindView(R.id.tv1)
     TextView mTextView1;
-
     @BindView(R.id.tv2)
     TextView mTextView2;
 
@@ -20,7 +19,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
-//        mTextView1.setText("hello android");
-//        mTextView2.setText("hello Python");
+        mTextView1.setText("hello android");
+        mTextView2.setText("hello Python");
     }
 }
