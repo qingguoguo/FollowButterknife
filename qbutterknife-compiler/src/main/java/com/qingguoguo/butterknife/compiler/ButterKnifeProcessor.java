@@ -2,6 +2,7 @@ package com.qingguoguo.butterknife.compiler;
 
 import com.google.auto.service.AutoService;
 import com.qingguoguo.butterknife.annotations.BindView;
+import com.qingguoguo.butterknife.annotations.OnClick;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.JavaFile;
 import com.squareup.javapoet.MethodSpec;
@@ -66,6 +67,7 @@ public class ButterKnifeProcessor extends AbstractProcessor {
     private Set<Class<? extends Annotation>> getSupportedAnnotations() {
         Set<Class<? extends Annotation>> annotations = new LinkedHashSet<>();
         annotations.add(BindView.class);
+        annotations.add(OnClick.class);
         return annotations;
     }
 
@@ -95,15 +97,29 @@ public class ButterKnifeProcessor extends AbstractProcessor {
             }
             elements.add(element);
         }
-        System.out.println("----" + elementMap + "-----");
 
+        Set<? extends Element> elementSetClick = roundEnvironment.getElementsAnnotatedWith(OnClick.class);
+        System.out.println("------------------elementSetClick------------------" + elementSetClick);
+        for (Element element : elementSetClick) {
+            System.out.println("----" + element.getSimpleName() + "-----" + element.getEnclosingElement());
+            Element enclosingElement = element.getEnclosingElement();
+            System.out.println("------------------enclosingElement------------------" + enclosingElement);
+            List<Element> elements = elementMap.get(enclosingElement);
+            if (elements == null) {
+                elements = new ArrayList<>();
+                elementMap.put(enclosingElement, elements);
+            }
+            elements.add(element);
+        }
+
+        System.out.println("----" + elementMap + "-----");
         // 生成代码
         Set<Map.Entry<Element, List<Element>>> entries = elementMap.entrySet();
         for (Map.Entry<Element, List<Element>> entry : entries) {
+            System.out.println("entry----" + entry + "-----");
             Element element = entry.getKey();
             // 父类
             ClassName unBinderClassName = ClassName.get("com.qingguoguo.butterknife", "UnBinder");
-
             // 生成类文件
             // activity Class Name
             String activityClassNameStr = element.getSimpleName().toString();
@@ -115,34 +131,51 @@ public class ButterKnifeProcessor extends AbstractProcessor {
             activityBuilder.addSuperinterface(unBinderClassName);
 
             //---------添加属性 private XXXActivity target ;-------//
-            activityBuilder.addField(activityClassName, "target", Modifier.PRIVATE);
+            activityBuilder.addField(activityClassName, "mTarget", Modifier.PRIVATE);
 
             //---------添加构造方法  public xxx_ViewBinding(xxx target) -------------------//
             MethodSpec.Builder constructorMethodBuilder = MethodSpec.constructorBuilder();
             constructorMethodBuilder.addParameter(activityClassName, "target").addModifiers(Modifier.PUBLIC);
-            constructorMethodBuilder.addStatement("this.target = target");
+            constructorMethodBuilder.addStatement("this.mTarget = target");
 
-            //-------------------添加接口实现UnBinder 要重写的unbind方法----------//
+            //-------------------添加实现接口UnBinder要重写的unbind方法----------//
             ClassName callSuperClassName = ClassName.get("android.support.annotation",
                     "CallSuper");
             MethodSpec.Builder unbindMethodBuilder = MethodSpec
                     .methodBuilder("unbind")
                     .addAnnotation(Override.class)
                     .addAnnotation(callSuperClassName).addModifiers(Modifier.PUBLIC);
-            unbindMethodBuilder.addStatement("$T target = this.target", activityClassName);
+            unbindMethodBuilder.addStatement("$T target = this.mTarget", activityClassName);
             unbindMethodBuilder.addStatement("if (target == null) throw new IllegalStateException(\"Bindings already cleared.\")");
 
-            //-------------------添加类有注解的属性----------------------//
+            //-------------------解析类有注解的属性，生成代码----------------------//
             List<Element> elementList = entry.getValue();
             for (Element viewBindIdElement : elementList) {
                 String filedName = viewBindIdElement.getSimpleName().toString();
-                int id = viewBindIdElement.getAnnotation(BindView.class).value();
+                BindView annotation = viewBindIdElement.getAnnotation(BindView.class);
                 ClassName utilsClassName = ClassName.get("com.qingguoguo.butterknife",
                         "Utils");
-                constructorMethodBuilder.addStatement("this.target.$L = $T.findViewById(target,$L)", filedName, utilsClassName, id);
-                unbindMethodBuilder.addStatement("this.target.$L = null", filedName);
+                if (annotation != null) {
+                    int id = annotation.value();
+                    constructorMethodBuilder.addStatement("this.mTarget.$L = $T.findViewById(target,$L)", filedName, utilsClassName, id);
+                    unbindMethodBuilder.addStatement("this.mTarget.$L = null", filedName);
+                } else {
+                    int[] idArray = viewBindIdElement.getAnnotation(OnClick.class).value();
+                    System.out.println("----" + idArray.length + "-----");
+                    for (int item : idArray) {
+                        constructorMethodBuilder.addStatement("$T.findViewById(target,$L).setOnClickListener(new $L.OnClickListener() {\n" +
+                                "      @Override\n" +
+                                "      public void onClick($L v) {\n" +
+                                "           mTarget." +
+                                viewBindIdElement.getSimpleName() +
+                                "(v);\n" +
+                                "      }\n" +
+                                "})", utilsClassName, item, "android.view.View", "android.view.View");
+                    }
+                }
+                System.out.println("-----***************************----" + filedName);
             }
-            unbindMethodBuilder.addStatement("this.target = null");
+            unbindMethodBuilder.addStatement("this.mTarget = null");
             activityBuilder.addMethod(unbindMethodBuilder.build());
             activityBuilder.addMethod(constructorMethodBuilder.build());
 
@@ -152,7 +185,7 @@ public class ButterKnifeProcessor extends AbstractProcessor {
             //----------------生成Java文件----------------//
             try {
                 JavaFile.builder(packageName,
-                        activityBuilder.build()).addFileComment("仿ButterKnife自动生成").build().writeTo(mFile);
+                        activityBuilder.build()).addFileComment("APT自动生成").build().writeTo(mFile);
             } catch (IOException e) {
                 e.printStackTrace();
             }

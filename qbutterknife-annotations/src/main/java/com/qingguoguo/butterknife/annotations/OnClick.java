@@ -11,7 +11,7 @@ import java.lang.annotation.Target;
  * 描述：
  */
 @Target(ElementType.METHOD)
-@Retention(RetentionPolicy.RUNTIME)
-@interface OnClick {
+@Retention(RetentionPolicy.CLASS)
+public @interface OnClick {
     int[] value();
 }
